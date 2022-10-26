@@ -28,6 +28,12 @@ The project needs sqlite3ext.h and inja.hpp
      sqlite_template_inja.cpp -o template.so
   ```
 
+On Windows, I used  `vcvars64.bat` to set up the compiler for 64-bit. I will have a go at using vcpkg as described here: https://json.nlohmann.me/integration/package_managers/#vcpkg
+```
+cl  -DSQLITE_API=__declspec(dllexport)  /nologo /EHsc /I/packages /I. /I../sqlite-amalgamation-3390300  /LD sqlite_template_inja.cpp /Fo:template
+```
+It was a bit tricky to get this working because of name mangling and visibility but DUMPBIN proved
+very useful for debugging the exported symbols.
 * load
 ```sql
 sqlite> .load ./template

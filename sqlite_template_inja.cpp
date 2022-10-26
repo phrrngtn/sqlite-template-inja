@@ -8,14 +8,11 @@ SQLITE_EXTENSION_INIT1
 using json = nlohmann::json;
 using namespace std;
 
-extern "C"
-{
-  // This needs to be callable from C
-  int sqlite3_template_init(
+// This needs to be callable from C
+extern "C"  SQLITE_API int sqlite3_template_init(
       sqlite3 *db,
       char **pzErrMsg,
       const sqlite3_api_routines *pApi);
-}
 
 // this is the 'logic' of the extension and can be written in idiomatic C++
 // exception handling etc can be done outside.
