@@ -2,14 +2,22 @@
 #include <sqlite3ext.h>
 SQLITE_EXTENSION_INIT1
 
-#include <inja.hpp>
+#include <inja/inja.hpp>
 #include <iostream>
+
+
+#ifdef WIN32
+#define SQLITE_EXTENSION_ENTRY_POINT __declspec(dllexport)
+#else
+#define SQLITE_EXTENSION_ENTRY_POINT
+#endif
+
 
 using json = nlohmann::json;
 using namespace std;
 
 // This needs to be callable from C
-extern "C"  SQLITE_API int sqlite3_template_init(
+extern "C"  SQLITE_EXTENSION_ENTRY_POINT int sqlite3_template_init(
       sqlite3 *db,
       char **pzErrMsg,
       const sqlite3_api_routines *pApi);
@@ -57,17 +65,17 @@ static void inja_func(
     // TODO: figure out how the memory management is working so as to avoid memory-leaks
     // "The sqlite3_result_error() and sqlite3_result_error16() routines make a
     //  private copy of the error message text before they return"
-    sqlite3_result_error(context, message.data(), message.length());
+    sqlite3_result_error(context, message.data(), (int)message.length());
     return;
   }
   catch (json::exception e) {
     std::string message = e.what();
-    sqlite3_result_error(context, message.data(),message.length());
+    sqlite3_result_error(context, message.data(), (int)message.length());
     return;
   }
 
   // TODO: deal with encodings, preferred encodings etc.
-  sqlite3_result_text(context, expanded.data(), expanded.length(), SQLITE_TRANSIENT);
+  sqlite3_result_text(context, expanded.data(), (int)expanded.length(), SQLITE_TRANSIENT);
   // not sure if we have to do anything with freeing 'expanded'
   // I think it will be taken care of by the runtime simply by going out of scope
   // and that nothing has to be done to it explicitly.
