@@ -17,9 +17,19 @@ Building
 ========
 I followed the instructions in https://visitlab.pages.fi.muni.cz/tutorials/vs-code/index.html to use CMake and vcpkg.
 
+
+On Linux (wsl2 Ubuntu),
+```
+cmake .. -DCMAKE_TOOLCHAIN_FILE=/home/phrrngtn/work/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux
+```
+
 * load
 ```sql
+-- On Windows
 sqlite> .load ./sqlite_template_inja sqlite3_template_init
+
+-- On Linux
+ sqlite> .load ./libsqlite_template_inja sqlite3_template_init
 
 sqlite> select * FROM pragma_function_list where name = 'template_render';
 template_render|0|s|utf8|2|2048
