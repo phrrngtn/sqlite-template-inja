@@ -5,22 +5,20 @@ SQLITE_EXTENSION_INIT1
 #include <inja/inja.hpp>
 #include <iostream>
 
-
 #ifdef WIN32
 #define SQLITE_EXTENSION_ENTRY_POINT __declspec(dllexport)
 #else
 #define SQLITE_EXTENSION_ENTRY_POINT
 #endif
 
-
 using json = nlohmann::json;
 using namespace std;
 
 // This needs to be callable from C
-extern "C"  SQLITE_EXTENSION_ENTRY_POINT int sqlite3_template_init(
-      sqlite3 *db,
-      char **pzErrMsg,
-      const sqlite3_api_routines *pApi);
+extern "C" SQLITE_EXTENSION_ENTRY_POINT int sqlite3_template_init(
+    sqlite3 *db,
+    char **pzErrMsg,
+    const sqlite3_api_routines *pApi);
 
 // this is the 'logic' of the extension and can be written in idiomatic C++
 // exception handling etc can be done outside.
@@ -58,7 +56,7 @@ static void inja_func(
   {
     expanded = template_render(template_string, json_data);
   }
-  catch (inja::InjaError  e)
+  catch (inja::InjaError e)
   {
     // how to do sprintf-like formatting?
     std::string message = "Inja exception: " + e.message + "(" + e.type + ")";
@@ -68,7 +66,8 @@ static void inja_func(
     sqlite3_result_error(context, message.data(), (int)message.length());
     return;
   }
-  catch (json::exception e) {
+  catch (json::exception e)
+  {
     std::string message = e.what();
     sqlite3_result_error(context, message.data(), (int)message.length());
     return;
