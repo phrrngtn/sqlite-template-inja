@@ -3,6 +3,7 @@
 
 build
 .vs
+.vscode
 
 # Compiled Object files
 *.slo
@@ -33,3 +34,4 @@ build
 *.exe
 *.out
 *.app
+
