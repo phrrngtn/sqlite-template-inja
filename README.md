@@ -17,8 +17,22 @@ Building
 ========
 I followed the instructions in https://visitlab.pages.fi.muni.cz/tutorials/vs-code/index.html to use CMake and vcpkg.
 
+For each remote machine (in my case wsl2 and Mac), I hand-edited the user-settings
+for the remote machine e.g. `/Users/phrrngtn/.vscode-server/data/Machine/settings.json`
+with this seemingly redundant setting but I was not able to get it to work using only
+one.
+```json
+{
+    "cmake.configureArgs": [
+        "-DCMAKE_TOOLCHAIN_FILE=/Users/phrrngtn/work/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    ],
+    "cmake.configureSettings": {
+        "CMAKE_TOOLCHAIN_FILE": "/Users/phrrngtn/work/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    },
+}
+```
 
-On Linux (wsl2 Ubuntu),
+Here is how to do it by hand if you don't want to use VS code
 ```
 cmake .. -DCMAKE_TOOLCHAIN_FILE=/home/phrrngtn/work/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux
 ```
@@ -30,6 +44,9 @@ sqlite> .load ./sqlite_template_inja sqlite3_template_init
 
 -- On Linux
  sqlite> .load ./libsqlite_template_inja sqlite3_template_init
+
+ -- On Mac
+ sqlite> .load libsqlite_template_inja sqlite3_template_init
 
 sqlite> select * FROM pragma_function_list where name = 'template_render';
 template_render|0|s|utf8|2|2048
