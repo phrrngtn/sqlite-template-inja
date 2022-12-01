@@ -20,15 +20,14 @@ extern "C" SQLITE_EXTENSION_ENTRY_POINT int sqlite3_template_init(
     char **pzErrMsg,
     const sqlite3_api_routines *pApi);
 
-// this is the 'logic' of the extension and can be written in idiomatic C++
-// exception handling etc can be done outside.
-// TODO: maybe pass in an Environment? Keep an LRU of templates?
-// It is probably expensive to parse the template for every function invocation
-std::string template_render(string template_string, string json_data)
-{
-  json data = json::parse(json_data);
+void free_inja_environment(void *p) {
+    //cerr << "free environment" << endl;
+    delete (inja::Environment *)p;
+}
 
-  return inja::render(template_string, data);
+void free_inja_template(void *p) {
+  //cerr << "free template" << endl;
+    delete (inja::Template *)p;
 }
 
 // This is the function that will be called from SQLite and it has to
@@ -38,23 +37,70 @@ static void inja_func(
     int argc,
     sqlite3_value **argv)
 {
-  // TODO: replace with an error
-  assert(argc == 2);
+   assert(argc >= 2);
 
-  // do some more soundess checking
-  if (sqlite3_value_type(argv[0]) == SQLITE_NULL)
-    return;
+   if (sqlite3_value_type(argv[0]) == SQLITE_NULL ||
+        sqlite3_value_type(argv[1]) == SQLITE_NULL) {
+            sqlite3_result_null(context);
+            return;
+        }   
 
-  std::string expanded, template_string, json_data;
+  std::string expanded, template_string, json_data, template_options;
+  int save_env=0;
+  int save_template=0;
+
+  inja::Environment *env;
+  inja::Template *temp;
+  env = (inja::Environment *)sqlite3_get_auxdata(context,2);
+  temp = (inja::Template *)sqlite3_get_auxdata(context,0);
+
+
+  if (env == nullptr){
+    save_env=1;
+    env = new inja::Environment();
+
+    if (sqlite3_value_type(argv[2]) == SQLITE_TEXT){
+      // TODO: put in some schema-validation/error-recovery.
+        template_options = (reinterpret_cast<const char *>(sqlite3_value_text(argv[2])));
+        auto options = json::parse(template_options);
+        if (options.contains("expression")){
+          auto v = options["expression"];
+          env->set_expression(v[0], v[1]);
+        }
+        if (options.contains("comment")){
+          auto v = options["comment"];
+          env->set_comment(v[0], v[1]);          
+        }
+        if (options.contains("statement")){
+          auto v = options["statement"];
+          env->set_statement(v[0], v[1]);  
+        }     
+        if (options.contains("line_statement")){
+          auto v = options["line_statement"];
+          env->set_line_statement(v[0]);  
+        }           
+    }  
+  }
+  if (temp == nullptr){
+    save_template = 1;
+    template_string = (reinterpret_cast<const char *>(sqlite3_value_text(argv[0])));
+    // attempt to stash the parsed template somewhere
+    // want to use the env to parse it (because it may have options) but don't
+    // know how to get a pointer to a Template other than 
+    inja::Template t1 = env->parse(template_string);
+    temp = new inja::Template(t1);
+  }
+
 
   // hope that overloaded assignment operator will do the right thing.
   // see if there is excessive copying going on.
-  template_string = (reinterpret_cast<const char *>(sqlite3_value_text(argv[0])));
+ 
   json_data = (reinterpret_cast<const char *>(sqlite3_value_text(argv[1])));
   // TODO: figure out when to return an error vs sqlite3_result_null
   try
   {
-    expanded = template_render(template_string, json_data);
+    json data = json::parse(json_data);
+    expanded  = env->render(*temp, data);
   }
   catch (inja::InjaError e)
   {
@@ -78,6 +124,17 @@ static void inja_func(
   // not sure if we have to do anything with freeing 'expanded'
   // I think it will be taken care of by the runtime simply by going out of scope
   // and that nothing has to be done to it explicitly.
+
+   if (save_env==1){
+        // make sure to only set this the first time around as 
+        // "After each call to sqlite3_set_auxdata(C,N,P,X) where X is not NULL, SQLite will invoke the destructor 
+        //  function X with parameter P exactly once, when the metadata is discarded.""
+        sqlite3_set_auxdata(context, 2, env, free_inja_environment);
+    } 
+
+    if (save_template==1){
+      sqlite3_set_auxdata(context, 0, temp, free_inja_template);
+    }
   return;
 }
 
@@ -89,7 +146,7 @@ int sqlite3_template_init(
   int rc = SQLITE_OK;
   SQLITE_EXTENSION_INIT2(pApi);
   (void)pzErrMsg; /* Unused parameter */
-  rc = sqlite3_create_function(db, "template_render", 2,
+  rc = sqlite3_create_function(db, "template_render", 3,
                                SQLITE_UTF8 | SQLITE_DETERMINISTIC,
                                0, inja_func, 0, 0);
   return rc;
