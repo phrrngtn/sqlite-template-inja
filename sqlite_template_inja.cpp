@@ -59,7 +59,12 @@ static void inja_func(
     save_env=1;
     env = new inja::Environment();
 
-    if (sqlite3_value_type(argv[2]) == SQLITE_TEXT){
+    // not sure what happens if we try and access an argv beyond what is provided
+    // This test is supposed to read as "We have been provided with at least three arguments and the third argument is
+    // not null and is a string". The "at least three" as opposed to "exactly three" is that we may add more arguments into the
+    // signature later. Although SQLite supports registering different function pointers for different various of the
+    // same (SQL) function, it seems likely that we will use a single implementation with conditional logic
+    if (argc >= 3 && sqlite3_value_type(argv[2]) == SQLITE_TEXT){
       // TODO: put in some schema-validation/error-recovery.
         template_options = (reinterpret_cast<const char *>(sqlite3_value_text(argv[2])));
         auto options = json::parse(template_options);

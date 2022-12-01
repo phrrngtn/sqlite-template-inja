@@ -60,6 +60,16 @@ sqlite> select template_render('what is a  {{fruit}}, if not perfection', json_o
 what is a  banana, if not perfection
 ```
 
+There is an optional third argument which if present will be interpreted as a JSON object with keys of `comment`, `expression`, `statement` and `line_statement` and used to construct an `inja::Environment` pointer with options set as per https://github.com/pantor/inja#template-rendering
+
+For example, to use C-style comments in the template source, you would pass an object like this:
+```sql
+JSON_OBJECT('comment', json_array('/*', '*/'))
+```
+
+This mechanism from Inja was exposed to support templating of ODBC connection strings where curly braces ('{}') are 
+used extensively and clash with the Inja default `expression` delimiters of `{{` and `}}`.
+
 Error handling is still a bit rough
 ```sql
 -- bogus JSON (passed in a string that looks like JSON but isn't)
