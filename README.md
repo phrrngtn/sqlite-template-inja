@@ -39,19 +39,13 @@ cmake .. -DCMAKE_TOOLCHAIN_FILE=/home/phrrngtn/work/vcpkg/scripts/buildsystems/v
 
 * load
 ```sql
--- On Windows
-sqlite> .load ./sqlite_template_inja sqlite3_template_init
-
--- On Linux
- sqlite> .load ./libsqlite_template_inja sqlite3_template_init
-
- -- On Mac
- sqlite> .load libsqlite_template_inja sqlite3_template_init
+-- On Windows, Linux and Mac.
+sqlite> .load ./inja
 
 sqlite> select * FROM pragma_function_list where name = 'template_render';
-template_render|0|s|utf8|2|2048
+template_render|0|s|utf8|3|2048
 ```
-* extension exports just one function, `template_render` which takes an Inja template string and a JSON object and returns the
+* extension exports just one function, `template_render` which takes an Inja template string and a JSON object (and, optionally, a JSON object for configuration) and returns the
 template rendered wrt the JSON data.
 ```sql
 sqlite> select template_render('what is a  {{fruit}}, if not perfection', json_object('fruit', 'banana'));

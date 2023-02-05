@@ -15,7 +15,7 @@ using json = nlohmann::json;
 using namespace std;
 
 // This needs to be callable from C
-extern "C" SQLITE_EXTENSION_ENTRY_POINT int sqlite3_template_init(
+extern "C" SQLITE_EXTENSION_ENTRY_POINT int sqlite3_inja_init(
     sqlite3 *db,
     char **pzErrMsg,
     const sqlite3_api_routines *pApi);
@@ -143,7 +143,7 @@ static void inja_func(
   return;
 }
 
-int sqlite3_template_init(
+int sqlite3_inja_init(
     sqlite3 *db,
     char **pzErrMsg,
     const sqlite3_api_routines *pApi)
