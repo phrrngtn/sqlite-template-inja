@@ -151,6 +151,11 @@ int sqlite3_inja_init(
   int rc = SQLITE_OK;
   SQLITE_EXTENSION_INIT2(pApi);
   (void)pzErrMsg; /* Unused parameter */
+
+  rc = sqlite3_create_function(db, "template_render", 2,
+                               SQLITE_UTF8 | SQLITE_DETERMINISTIC,
+                               0, inja_func, 0, 0);
+
   rc = sqlite3_create_function(db, "template_render", 3,
                                SQLITE_UTF8 | SQLITE_DETERMINISTIC,
                                0, inja_func, 0, 0);

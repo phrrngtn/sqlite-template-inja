@@ -48,7 +48,7 @@ template_render|0|s|utf8|3|2048
 * extension exports just one function, `template_render` which takes an Inja template string and a JSON object (and, optionally, a JSON object for configuration) and returns the
 template rendered wrt the JSON data.
 ```sql
-sqlite> select template_render('what is a  {{fruit}}, if not perfection', json_object('fruit', 'banana'));
+select template_render('what is a  {{fruit}}, if not perfection', json_object('fruit', 'banana'));
 ```
 ```
 what is a  banana, if not perfection
@@ -60,7 +60,10 @@ For example, to use C-style comments in the template source, you would pass an o
 ```sql
 JSON_OBJECT('comment', json_array('/*', '*/'))
 ```
-
+or a JSON literal:
+```sql
+'{"comment" : ["/*", "*/"]}'
+```
 This mechanism from Inja was exposed to support templating of ODBC connection strings where curly braces ('{}') are 
 used extensively and clash with the Inja default `expression` delimiters of `{{` and `}}`.
 
